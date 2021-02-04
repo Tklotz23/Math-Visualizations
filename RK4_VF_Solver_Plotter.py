@@ -3,9 +3,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+## User input. Currently set up for numpy notation only.
+print("\n\n Welcome! In the following prompts use x[0] and x[1] for the 1st and 2nd components respectively of your ODE system.\n")
+user_RHS_1 = input("Enter RHS of 1st Eq. with numpy notation: ")
+user_RHS_2 = input("Enter RHS of 2nd Eq. with numpy notation: ")
+user_IC_t0 = input("Enter the t_0 value: ")
+user_IC_X01 = input("Enter the 1st X_0 value: ")
+user_IC_X02 = input("Enter the 2nd X_0 value: ")
 ## Example ODE: Duffing Equation.
-t_0 = 0 # Initial conditions  
-X_0 = np.array([0.0,1.0])
+t_0 = float(user_IC_t0) # Initial conditions  
+X_0 = np.array([float(user_IC_X01),float(user_IC_X02)])
 def RHS_ODE(t,x):
     alpha = 0.5 # specific parameters for Duffing Equation. 
     beta = 2/3
@@ -13,11 +20,13 @@ def RHS_ODE(t,x):
     delta = 1/8
     omega = 10
 
-    f1 = x[1] # RHS of first ODE in the system.
-    f2 =-delta*x[1]-beta*x[0]**3-alpha*x[0] # RHS of the second. 
+    # f1 = x[1] # RHS of first ODE in the system.
+    # f2 = -delta*x[1]-beta*x[0]**3-alpha*x[0] # RHS of the second.
+    f1 = eval(user_RHS_1)
+    f2 = eval(user_RHS_2) 
     return np.array([f1,f2])
 ## Numerical Solution as a python function
-h = 0.001 # Step-size
+h = 0.005 # Step-size
 def x_sol(time, X_naught):
     x = X_naught # Initialize I.C.
     sol =[]
@@ -31,7 +40,6 @@ def x_sol(time, X_naught):
     return np.array(sol)
 T = 14*np.pi # End of desired solution interval 
 t = np.arange(t_0, T+h, h)
-print(t)
 ## Function that creates each little line on a mesh_grid according the vector field defined by the ODE system. 
 def vector_line(t,p_x1,p_x2,mesh_radius):
     point = np.array([p_x1,p_x2]) # Midpoint for the line
