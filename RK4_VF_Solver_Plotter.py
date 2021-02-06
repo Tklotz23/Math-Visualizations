@@ -63,21 +63,26 @@ T = 14*np.pi # End of desired solution interval
 t = np.arange(t_0, T+h, h) # Solution interval. 
 
 ## Function that creates each little line on a mesh_grid according the vector field defined by the ODE system. 
-def vector_line(t,p_x1,p_x2,mesh_radius):
+def vector_line(t,p_x1,p_x2,mesh_r):
     point = np.array([p_x1,p_x2]) # Midpoint for the line
-    if np.abs(RHS_ODE(t,point)[0])<=1E-10 and RHS_ODE(t,point)[0]>0:
+    if np.abs(RHS_ODE(t,point)[0])<=1E-14 and RHS_ODE(t,point)[0]>0:
         angle = np.pi/2
-    elif np.abs(RHS_ODE(t,point)[0])<=1E-10 and RHS_ODE(t,point)[0]<0:
+    elif np.abs(RHS_ODE(t,point)[0])<=1E-14 and RHS_ODE(t,point)[0]<0:
         angle = -np.pi/2
     else:
         angle = np.arctan(RHS_ODE(t,point)[1]/RHS_ODE(t,point)[0]) # angle of v.f. with x1-axis.
-    x1_pol_comp = mesh_radius*np.cos(angle) # coordinates given by v.f. on the circle centered at point. 
-    x2_pol_comp = mesh_radius*np.sin(angle)
-    circle_pt = np.array([x1_pol_comp,x2_pol_comp]) # Point on circle.
-    arrow_start = point-circle_pt # Starting end of line.
+    x1_circle = mesh_r*np.cos(angle) # Components of point on circle.
+    x2_circle = mesh_r*np.sin(angle)
+    
+    x1_circle_anti = mesh_r*np.cos(angle+np.pi) # Components of antipodal point on circle.
+    x2_circle_anti = mesh_r*np.sin(angle+np.pi)    
+
+    circle_pt = np.array([x1_circle,x2_circle]) # Point on circle.
+    circle_pt_anti = np.array([x1_circle_anti,x2_circle_anti]) # Antipodal point on circle. 
+    arrow_start = point+circle_pt_anti # Starting end of line.
     arrow_end = point+circle_pt # Ending end of line.
-    arrow = np.array([arrow_start,arrow_end]) # The line!
-    return np.transpose(arrow)[0],np.transpose(arrow)[1],angle,arrow_start,point,arrow_end, circle_pt, mesh_radius, np.abs(x1_pol_comp**2+x2_pol_comp**2-mesh_radius**2),arrow
+    arrow = np.array([arrow_start,arrow_end]) # The line! (Or data for matplotlin to plot the line. Needs to be transposed upon function return for correct plot). 
+    return np.transpose(arrow)[0],np.transpose(arrow)[1],angle,arrow_start,point,arrow_end, circle_pt
 ## Function to determine color of vectors/lines based on vector magnitude.
 #def line_color(t,p_x1,p_x2,mag_max):
     
@@ -85,7 +90,8 @@ def vector_line(t,p_x1,p_x2,mesh_radius):
 mesh_density = 30
 x1_val = np.linspace(np.min(x_sol(t,X_0)[:,0]),np.max(x_sol(t,X_0)[:,0]),mesh_density)
 x2_val = np.linspace(np.min(x_sol(t,X_0)[:,1]),np.max(x_sol(t,X_0)[:,1]),mesh_density)
-m_radius = np.min(np.array((x1_val[1]-x1_val[0])/2,(x2_val[1]-x2_val[0])/2)) # Half the distance between horizontal or vertical meshpoints
+# m_radius = np.min(np.array([(x1_val[1]-x1_val[0])/2,(x2_val[1]-x2_val[0])/2]))
+m_radius = np.max(np.array([(x1_val[1]-x1_val[0])/2,(x2_val[1]-x2_val[0])/2])) # Half the distance between horizontal or vertical meshpoints
 print(2*m_radius)
 m_x1, m_x2 = np.meshgrid(x1_val,x2_val)
 mesh_full = np.array([m_x1,m_x2]) # Full mesh.
@@ -103,19 +109,19 @@ find_bad_len = []
 for p in x1_val: # This double for-loop plots each arrow on the meshgrid.
     for q in x2_val:
         ax.plot(vector_line(t,p,q,m_radius)[0],vector_line(t,p,q,m_radius)[1], color='c')
-        ax.plot(vector_line(t,p,q,m_radius)[0],vector_line(t,p,q,m_radius)[1],marker='.', color='r',linestyle='none')
+        #ax.plot(vector_line(t,p,q,m_radius)[0],vector_line(t,p,q,m_radius)[1],marker='.', color='r',linestyle='none')
+        # The following is a print of a bunch of stuff from the vector_line function. 
         counter+=1
-        line_length_half = np.linalg.norm(np.add(vector_line(t,p,q,m_radius)[9][1],-vector_line(t,p,q,m_radius)[9][0]))/2
-        print(counter)
+        line_length_half = np.linalg.norm(np.transpose(vector_line(t,p,q,m_radius)[9])[1]-np.transpose(vector_line(t,p,q,m_radius)[9])[0])/2 
+        print("counting the point: ",counter)
         if line_length_half >= 1.05*m_radius:
             find_bad_len.append(line_length_half)
         min_list.append(vector_line(t,p,q,m_radius)[1].tolist())
-        print(line_length_half)
-        print(vector_line(t,p,q,m_radius)[2])
-        print(vector_line(t,p,q,m_radius)[3],', ',vector_line(t,p,q,m_radius)[4],', ',vector_line(t,p,q,m_radius)[5])
-        print(vector_line(t,p,q,m_radius)[6])
-        print(vector_line(t,p,q,m_radius)[7])
-        print(vector_line(t,p,q,m_radius)[8])
+        print("Length of line...supposedly: ",line_length_half)
+        print("angle: ",vector_line(t,p,q,m_radius)[2])
+        print("start point of line, grid point, and end poit ofline resp.: ",vector_line(t,p,q,m_radius)[3],', ',vector_line(t,p,q,m_radius)[4],', ',vector_line(t,p,q,m_radius)[5])
+        print("point on circle of radius m_radius if centered at origin: ",vector_line(t,p,q,m_radius)[6])
+## this bit is double-checking that the points that have been calculated are what matplotlib thinks they are. 
 line_min = np.min(np.array(min_list))
 print(line_min)
 print(np.min(x2_val))
