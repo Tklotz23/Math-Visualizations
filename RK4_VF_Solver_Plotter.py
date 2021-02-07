@@ -66,35 +66,38 @@ def x_sol(time, X_naught):
                     overflow_risk = True
                 else: 
                     sol.append(np.array(x).tolist()) # Solution!
+        else:
+            print("Solution getting too large! Happens at time t=",s)
+            break
     return np.array(sol)
 
 t = np.arange(t_0, T+h, h) # Solution interval.  
 
 ## Function that creates each little line on a mesh_grid according the vector field defined by the ODE system. 
-def vector_line(t,p_x1,p_x2,mesh_r):
+def vector_line(t,p_x1,p_x2,r1,r2):
     point = np.array([p_x1,p_x2]) # Midpoint for the line
     if np.abs(RHS_ODE(t,point)[0])<=1E-14 and RHS_ODE(t,point)[0]>0:
         angle = np.pi/2
     elif np.abs(RHS_ODE(t,point)[0])<=1E-14 and RHS_ODE(t,point)[0]<0:
         angle = -np.pi/2
     else:
-        angle = np.arctan(RHS_ODE(t,point)[1]/RHS_ODE(t,point)[0]) # angle of v.f. with x1-axis.
-    x1_circle = mesh_r*np.cos(angle) # Components of point on circle.
-    x2_circle = mesh_r*np.sin(angle)
+        angle = np.arctan(r1*RHS_ODE(t,point)[1]/(r2*RHS_ODE(t,point)[0])) # angle of v.f. with x1-axis.
+    x1_ellipse = r1*np.cos(angle) # Components of point on ellipse.
+    x2_ellipse = r2*np.sin(angle)
     
-    x1_circle_anti = mesh_r*np.cos(angle+np.pi) # Components of antipodal point on circle.
-    x2_circle_anti = mesh_r*np.sin(angle+np.pi)    
+    x1_ellipse_anti = r1*np.cos(angle+np.pi) # Components of antipodal point on ellipse.
+    x2_ellipse_anti = r2*np.sin(angle+np.pi)    
 
-    circle_pt = np.array([x1_circle,x2_circle]) # Point on circle.
-    circle_pt_anti = np.array([x1_circle_anti,x2_circle_anti]) # Antipodal point on circle. 
-    arrow_start = point+circle_pt_anti # Starting end of line.
-    arrow_end = point+circle_pt # Ending end of line.
+    ellipse_pt = np.array([x1_ellipse,x2_ellipse]) # Point on ellipse.
+    ellipse_pt_anti = np.array([x1_ellipse_anti,x2_ellipse_anti]) # Antipodal point on ellipse. 
+    arrow_start = point+ellipse_pt_anti # Starting end of line.
+    arrow_end = point+ellipse_pt # Ending end of line.
     arrow = np.array([arrow_start,arrow_end]) # The line! (Or data for matplotlib to plot the line. Needs to be transposed upon function return for correct plot). 
-    return np.transpose(arrow)[0],np.transpose(arrow)[1],angle,arrow_start,point,arrow_end, circle_pt, arrow
+    return np.transpose(arrow)[0],np.transpose(arrow)[1]
 ## Function to determine color of vectors/lines based on vector magnitude.
 #def line_color(t,p_x1,p_x2,mag_max):
     
-## Now to make a SQUARE meshgrid adapted to the size of the solution curve
+## Now to make a meshgrid adapted to the size of the solution curve
 mesh_density = 30
 
 x1_sol_min = np.min(x_sol(t,X_0)[:,0])
@@ -103,16 +106,12 @@ x1_sol_max = np.max(x_sol(t,X_0)[:,0])
 x2_sol_min = np.min(x_sol(t,X_0)[:,1])
 x2_sol_max = np.max(x_sol(t,X_0)[:,1])
 
-sq_mesh_size =np.max(np.array([x1_sol_max-x1_sol_min,x2_sol_max-x2_sol_min]))
+x1_val = np.linspace(x1_sol_min,x1_sol_max,mesh_density)
+x2_val = np.linspace(x2_sol_min,x2_sol_max,mesh_density)
 
-if x1_sol_max-x1_sol_min >= x2_sol_max-x2_sol_min:
-    x1_val = np.linspace(x1_sol_min,x1_sol_max,mesh_density)
-    x2_val = np.linspace(x1_sol_min,x1_sol_max,mesh_density)
-else:
-    x1_val = np.linspace(x2_sol_min,x2_sol_max,mesh_density)
-    x2_val = np.linspace(x2_sol_min,x2_sol_max,mesh_density)
-m_radius = np.min(np.array([(x1_val[1]-x1_val[0])/2,(x2_val[1]-x2_val[0])/2])) # Half the distance between horizontal or vertical meshpoints
-print(2*m_radius)
+m_radius_1 = (x1_val[1]-x1_val[0])/2 # Half the distance between horizontal meshpoints
+m_radius_2 = (x2_val[1]-x2_val[0])/2 # Half the distance between the vertical meshpoints
+
 m_x1, m_x2 = np.meshgrid(x1_val,x2_val)
 mesh_full = np.array([m_x1,m_x2]) # Full mesh.
 
@@ -125,6 +124,6 @@ ax.plot(x_sol(t,X_0)[:,0],x_sol(t,X_0)[:,1], color='tab:orange') # Solution curv
 ax.plot(m_x1,m_x2, marker='.', color='w', linestyle='none') # Plotting the meshgrid
 for p in x1_val: # This double for-loop plots each arrow on the meshgrid.
     for q in x2_val:
-        ax.plot(vector_line(t,p,q,m_radius)[0],vector_line(t,p,q,m_radius)[1], color='c')
+        ax.plot(vector_line(t,p,q,m_radius_1,m_radius_2)[0],vector_line(t,p,q,m_radius_1,m_radius_2)[1], color='c')
 ## Show-off time I guess
 plt.show(fig)
