@@ -1,5 +1,5 @@
 ## This code is for plotting numerical solutions to ODE systems in a 2D phase-plane as well as the corresponding vector field. 
-
+## WARNING: This program currently uses the python eval() function. DO NOT run with untrusted input. 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
