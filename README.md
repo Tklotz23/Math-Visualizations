@@ -4,4 +4,4 @@ This repository is for code that I make for fun math visualizations! I'm excited
 
 Here are some pictures from the RK4_VF_Solver_Plotter code: 
 
-Example 1: ![](ODE_test_case.png)
+Example 1: ![](Pictures/ODE_test_case.jpg)
