@@ -4,8 +4,8 @@ This repository is for code that I make for fun math visualizations! I'm excited
 
 Here are some pictures from the RK4_VF_Solver_Plotter code: 
 
-Example 1: ![](Pictures/Nonlinear_ex_2_1.jpg)
+Example 1: ![](Pictures/Nonlinear_ex_2_1.jpeg)
 
-Example 2: ![](Pictures/Nonlinear_ex_1_1.jpg)
+Example 2: ![](Pictures/Nonlinear_ex_1_1.jpeg)
 
-Example 3: ![](Pictures/Linear_ex_3_1.jpg)
+Example 3: ![](Pictures/Linear_ex_3_1.jpeg)
