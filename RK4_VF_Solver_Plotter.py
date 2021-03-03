@@ -1,5 +1,6 @@
 ## This code is for plotting numerical solutions to ODE systems in a 2D phase-plane as well as the corresponding vector field. Everything is adapted to the size of the solution curve.
 ## WARNING: This program currently uses the python eval() function. DO NOT run with untrusted input. This also means you SHOULD NOT include stupidly big numbers in the RHS of your ODE input. You will use up all your memory! 
+## Don't forget to download the custom style sheet 'dark_custom1.mplstyle' found in the same folder as this program. 
 ## Finally, the program itself will become more organized overtime, even with newer features.
 
 import numexpr as ne
