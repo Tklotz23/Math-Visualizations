@@ -1,7 +1,7 @@
 ## This code is for plotting numerical solutions to ODE systems in a 2D phase-plane as well as the corresponding vector field. Everything is adapted to the size of the solution curve.
 ## WARNING: This program currently uses the python eval() function. DO NOT run with untrusted input. This also means you SHOULD NOT include stupidly big numbers in the RHS of your ODE input. You will use up all your memory! 
-## Don't forget to download the custom style sheet 'dark_custom1.mplstyle' found in the same folder as this program. 
-## Finally, the program itself will become more organized overtime, even with newer features.
+## Don't forget to download the custom style sheet 'dark_custom1.mplstyle' found in the same folder as this program.
+## Finally, the program itself will become more organized overtime, even with newer features. Currently it has a mild case of "spaghetti". 
 
 import numexpr as ne
 import numpy as np
@@ -11,15 +11,11 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
-## These are functions for example ODEs that are stored in a dictonary. Choices are called by user. 
+## These are functions for example ODEs that are stored in a dictonary. Choices are called by user.
+
 def RHS_ODE1(t,x):
-    alpha = 0.5 # specific parameters for Duffing Equation. 
-    beta = 2/3
-    gamma = 5/6 
-    delta = 1/8
-    omega = 10
     f1 = np.sin(x[1]) # RHS of first ODE in the system.
-    f2 = -delta*x[0]-alpha*np.cos(x[1]) # RHS of the second.
+    f2 = -x[0]/8-np.cos(x[1])/2 # RHS of the second.
     return np.array([f1,f2])
 
 def RHS_ODE2(t,x):
@@ -95,49 +91,56 @@ def solution_number(ex_choice):
         dimension = (int(sol_number),2)
         scaling_d = {'1': 3,'2': 3.2, '3': 0.5}
         X_0 = scaling_d[ex_choice]*np.random.uniform(-1,1,dimension)
-    return X_0
+    return X_0,int(sol_number)
 
 ## User input. Currently set up for numpy notation only.
-print("\n\n Welcome! In the following prompts use x[0] and x[1] for the 1st and 2nd state variables respectively of your ODE system.\n")
-example = input("Use an example ODE? enter 'y' for yes or anything else for no: ")
-if example == 'y':
+def user_choices():
+    print("\n\n Welcome! In the following prompts use x[0] and x[1] for the 1st and 2nd state variables respectively of your ODE system.\n")
+    example = input("Use an example ODE? enter 'y' for yes or anything else for no: ")
+    if example == 'y':
     ## Example parameters defined by user. 
-    ex_choice = input("Select Example (enter the listed integer). Options are:\n\n 1: nonlinear Ex 1\n 2: nonlinear Ex 2\n 3: linear \n")
-    if ex_choice == '1':
-        d_ind = ex_choice
-        t_0 = 0 # Initial conditions
-        T = 10*np.pi # End of desired solution interval 
-        X_0 = solution_number(ex_choice)
-    elif ex_choice == '2':
-        d_ind = ex_choice
-        t_0 = -14*np.pi # Initial conditions
-        T = 14*np.pi # End of desired solution interval 
-        X_0 = solution_number(ex_choice)
-    elif ex_choice == '3':
-        d_ind = ex_choice
-        A,t_0,T,v1,v2 = lin_coeff_matrix()
-        X_0 = solution_number(ex_choice)
-    else: 
-        print("Incorrect input! Please enjoy nonlinear example 2 for your troubles.")
-        d_ind = '2'
-        t_0 = 0 # Initial conditions
-        T = 14*np.pi # End of desired solution interval 
-        X_0 = solution_number('2')
-    print("Initial values randomly selected for your solution curve(s): ")
-    print(X_0) 
-else:
+        ex_choice = input("Select Example (enter the listed integer). Options are:\n\n 1: nonlinear Ex 1\n 2: nonlinear Ex 2\n 3: linear \n")
+        if ex_choice == '1':
+            d_ind = ex_choice
+            t_0 = 0 # Initial conditions
+            T = 10*np.pi # End of desired solution interval 
+            X_0,sol_number = solution_number(ex_choice)
+            A,v1,v2 = None,None,None
+        elif ex_choice == '2':
+            d_ind = ex_choice
+            t_0 = -14*np.pi # Initial conditions
+            T = 14*np.pi # End of desired solution interval 
+            X_0,sol_number = solution_number(ex_choice)
+            A,v1,v2 = None,None,None
+        elif ex_choice == '3':
+            d_ind = ex_choice
+            X_0,sol_number = solution_number(ex_choice)
+            A,t_0,T,v1,v2 = lin_coeff_matrix()
+        else: 
+            print("Incorrect input! Please enjoy nonlinear example 2 for your troubles.")
+            d_ind = '2'
+            t_0 = 0 # Initial conditions
+            T = 14*np.pi # End of desired solution interval 
+            X_0,sol_number = solution_number('2')
+            A,v1,v2 = None,None,None
+        print("Initial values randomly selected for your solution curve(s): ")
+        print(X_0) 
+    else:
     # User defined parameters including RHS of ODE systems, initial condition, and time interval. 
-    user_RHS_1 = input("Enter RHS of 1st Eq. with numpy notation: ")
-    user_RHS_2 = input("Enter RHS of 2nd Eq. with numpy notation: ")
-    user_IC_t0 = input("Enter the t_0 value: ")
-    user_IC_X01 = input("Enter the 1st X_0 value: ")
-    user_IC_X02 = input("Enter the 2nd X_0 value: ")
-    user_T = input("Enter the upper bound for the t-interval: ")
+        user_RHS_1 = input("Enter RHS of 1st Eq. with numpy notation: ")
+        user_RHS_2 = input("Enter RHS of 2nd Eq. with numpy notation: ")
+        user_IC_t0 = input("Enter the t_0 value: ")
+        user_IC_X01 = input("Enter the 1st X_0 value: ")
+        user_IC_X02 = input("Enter the 2nd X_0 value: ")
+        user_T = input("Enter the upper bound for the t-interval: ")
     
-    t_0 = float(user_IC_t0) # Initial conditions  
-    X_0 = np.array([[float(user_IC_X01),float(user_IC_X02)]])
-    T = float(user_T)
-    d_ind = '4'
+        t_0 = float(user_IC_t0) # Initial conditions  
+        X_0 = np.array([[float(user_IC_X01),float(user_IC_X02)]])
+        T = float(user_T)
+        d_ind = '4'
+        sol_number = 1
+        A,v1,v2 = None,None,None
+    return t_0,T,X_0,d_ind,sol_number,A,v1,v2,ex_choice
 ## Numerical Solution as a python function
 h = 0.005 # Step-size
 def x_sol(time, X_naught):
@@ -160,17 +163,52 @@ def x_sol(time, X_naught):
             print("Solution getting too large! Happens at time t=",s)
             break
     return np.array(sol)
+ 
+## Now to make a meshgrid adapted to the size of the solution curves.
+def mesh2D(t,sol):
+    mesh_density = 32
+    ## initializing lists to select largest and smallest coordinate values among all solution curves. 
+    min_list_1 = []
+    max_list_1 = []
+    min_list_2 = []
+    max_list_2 = []
+    for i in range(0,sol_number):
+        sol_x1 = sol[i][:,0]
+        sol_x2 = sol[i][:,1]
+        min_list_1.append(np.min(sol_x1))
+        max_list_1.append(np.max(sol_x1))
+        min_list_2.append(np.min(sol_x2))
+        max_list_2.append(np.max(sol_x2))
 
-t = np.arange(t_0, T+h, h) # Solution interval. 
+    x1_sol_min = min(min_list_1)
+    x1_sol_max = max(max_list_1)
+    x2_sol_min = min(min_list_2)
+    x2_sol_max = max(max_list_2)
+
+    x1_val = np.linspace(x1_sol_min,x1_sol_max,mesh_density)
+    x2_val = np.linspace(x2_sol_min,x2_sol_max,mesh_density)
+
+    m_radius_1 = (x1_val[1]-x1_val[0])/2 # Half the distance between horizontal meshpoints
+    m_radius_2 = (x2_val[1]-x2_val[0])/2 # Half the distance between the vertical meshpoints
+
+    m_x1, m_x2 = np.meshgrid(x1_val,x2_val)
+    mesh_full = np.array([m_x1,m_x2]) # Full mesh.
+    return [x1_val,x2_val],[m_radius_1,m_radius_2],mesh_full
+
 ## Function that creates each little line on a mesh_grid according the vector field defined by the ODE system. 
 def vector_line(t,p_x1,p_x2,r1,r2):
     point = np.array([p_x1,p_x2]) # Midpoint for the line
-    if np.abs(RHS_ODE[d_ind](t,point)[0])<=1E-10 and RHS_ODE[d_ind](t,point)[0]>0:
+    RHS_f1 = RHS_ODE[d_ind](t,point)[0]
+    RHS_f2 = RHS_ODE[d_ind](t,point)[1]
+    '''
+    if np.abs(RHS_f1)<=1E-10 and RHS_f1>0:
         angle = np.pi/2
-    elif np.abs(RHS_ODE[d_ind](t,point)[0])<=1E-10 and RHS_ODE[d_ind](t,point)[0]<0:
+    elif np.abs(RHS_f1)<=1E-10 and RHS_f1<0:
         angle = -np.pi/2
     else:
-        angle = np.arctan2(r1*RHS_ODE[d_ind](t,point)[1],(r2*RHS_ODE[d_ind](t,point)[0])) # angle of v.f. with x1-axis. NOTE: arctan2 eats in two values whereas arctan takes in a a single argument (usually y/x). 
+        angle = np.arctan2(r1*RHS_f2,r2*RHS_f1) #Get rid of following line if this is kept.
+    '''
+    angle = np.arctan2(r1*RHS_f2,r2*RHS_f1) # angle of v.f. with x1-axis. NOTE: arctan2 eats in two values whereas arctan takes in a a single argument (usually y/x). 
     x1_ellipse = r1*np.cos(angle) # Components of point on ellipse.
     x2_ellipse = r2*np.sin(angle)
     
@@ -189,73 +227,48 @@ def vector_line(t,p_x1,p_x2,r1,r2):
     
     return np.transpose(arrow)[0],np.transpose(arrow)[1],arrow_tip_start,arrow_tip_diff
 
-## Now to make a meshgrid adapted to the size of the solution curves.
-mesh_density = 32
-## initializing lists to select largest and smallest coordinate values among all solution curves. 
-min_list_1 = []
-max_list_1 = []
-min_list_2 = []
-max_list_2 = []
-for x0 in X_0:
-    min_list_1.append(np.min(x_sol(t,x0)[:,0]))
-    max_list_1.append(np.max(x_sol(t,x0)[:,0]))
-    min_list_2.append(np.min(x_sol(t,x0)[:,1]))
-    max_list_2.append(np.max(x_sol(t,x0)[:,1]))
-
-x1_sol_min = min(min_list_1)
-x1_sol_max = max(max_list_1)
-x2_sol_min = min(min_list_2)
-x2_sol_max = max(max_list_2)
-
-x1_val = np.linspace(x1_sol_min,x1_sol_max,mesh_density)
-x2_val = np.linspace(x2_sol_min,x2_sol_max,mesh_density)
-
-m_radius_1 = (x1_val[1]-x1_val[0])/2 # Half the distance between horizontal meshpoints
-m_radius_2 = (x2_val[1]-x2_val[0])/2 # Half the distance between the vertical meshpoints
-
-m_x1, m_x2 = np.meshgrid(x1_val,x2_val)
-mesh_full = np.array([m_x1,m_x2]) # Full mesh.
-
 ## Function to determine color of vectors/lines based on vector magnitude. Function returns rgb-alpha values in a tuple for use in the color option of a plot. 
 
-color_choice = 'winter' # Choosing the coloring for the vector field. Helpful later too.
-mag_max = np.max(np.sqrt(RHS_ODE[d_ind](t,mesh_full)[0]**2+RHS_ODE[d_ind](t,mesh_full)[1]**2)) # max magnitude of vf over whole mesh grid. 
-mag_min = np.min(np.sqrt(RHS_ODE[d_ind](t,mesh_full)[0]**2+RHS_ODE[d_ind](t,mesh_full)[1]**2)) # min magnitude of vf over whole mesh grid.
-
-def line_color(t,p_x1,p_x2):
+def line_color(t,p_x1,p_x2,mesh):
+    color_choice = 'winter' # Choosing the coloring for the vector field. Helpful later too.
+    mag_mesh = RHS_ODE[d_ind](t,mesh)
+    mag_max = np.max(np.sqrt(mag_mesh[0]**2+mag_mesh[1]**2)) # max magnitude of vf over whole mesh grid. 
+    mag_min = np.min(np.sqrt(mag_mesh[0]**2+mag_mesh[1]**2)) # min magnitude of vf over whole mesh grid.
     vf_coloring = cm.get_cmap(color_choice) # Assign a colormap to float values between 0 and 1. 
     point = np.array([p_x1,p_x2]) # Point in the mesh.
     v_p = RHS_ODE[d_ind](t,point) # Vector at the point in the mesh.
     v_p_mag = np.sqrt(v_p[0]**2+v_p[1]**2) # Magnitude of said vector. 
     v_p_mag_scaled = (v_p_mag-mag_min)/(mag_max-mag_min) # Linear scaling of vf magnitude on mesh grid to the interval [0,1]. 
-    return vf_coloring(v_p_mag_scaled), v_p_mag
+    return vf_coloring(v_p_mag_scaled),[mag_max,mag_min]
 
 ## A function to set up the plots.
-def plotting_time():
+def plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh):
+        
+    
     plt.style.use('dark_custom1')
     fig, ax = plt.subplots(figsize=(8,8)) # Fixing a square scaling.
     # ax.plot(m_x1,m_x2, marker='.', color='w', linestyle='none') # Plotting the meshgrid.
 
     ## This double for-loop plots each arrow on the meshgrid.
-    for p in x1_val:
-        for q in x2_val:
-            mag_color = line_color(t,p,q)[0]
-            arrow_start_x1 = vector_line(t,p,q,m_radius_1,m_radius_2)[2][0]
-            arrow_start_x2 = vector_line(t,p,q,m_radius_1,m_radius_2)[2][1]
-            dx1 = vector_line(t,p,q,m_radius_1,m_radius_2)[3][0]
-            dx2 = vector_line(t,p,q,m_radius_1,m_radius_2)[3][1]
+    for p in x_val_mesh[0]:
+        for q in x_val_mesh[1]:
+            mag_color,mag_extrema = line_color(t,p,q,mesh) # Gotta' streamline mag_extrema later. 
+            arrow_start_x1 = vector_line(t,p,q,m_radius[0],m_radius[1])[2][0]
+            arrow_start_x2 = vector_line(t,p,q,m_radius[0],m_radius[1])[2][1]
+            dx1 = vector_line(t,p,q,m_radius[0],m_radius[1])[3][0]
+            dx2 = vector_line(t,p,q,m_radius[0],m_radius[1])[3][1]
 
-            ax.plot(vector_line(t,p,q,m_radius_1,m_radius_2)[0],vector_line(t,p,q,m_radius_1,m_radius_2)[1],color=mag_color)
+            ax.plot(vector_line(t,p,q,m_radius[0],m_radius[1])[0],vector_line(t,p,q,m_radius[0],m_radius[1])[1],color=mag_color)
             #plt.arrow(arrow_start_x1,arrow_start_x2,dx1,dx2,shape='right',head_width=0.03,color=mag_color)
     ## Plots the solution curves
-    for x0 in X_0:
+    for i in range(0,sol_number):
         border_color = 'xkcd:black'#cm.get_cmap(color_choice)(0)
         inner_color = 'xkcd:beige'#cm.get_cmap(color_choice)(0.99)
-        ax.plot(x_sol(t,x0)[:,0],x_sol(t,x0)[:,1],linewidth=2.5,color=border_color)# Border.
-        ax.plot(x_sol(t,x0)[:,0],x_sol(t,x0)[:,1],color=inner_color) # Solution curve plot.
+        ax.plot(sol[i][:,0],sol[i][:,1],linewidth=2.5,color=border_color)# Border.
+        ax.plot(sol[i][:,0],sol[i][:,1],color=inner_color) # Solution curve plot.
 
     if ex_choice == '3': # Plot eigenvector subspaces for linear systems.
-        plot_e_vecs = input("Plot eigenvectors as well? Enter 'y' for yes ad anything else for no:\n ") 
+        plot_e_vecs = input("Plot eigenvectors as well? Enter 'y' for yes and anything else for no:\n ") 
         if plot_e_vecs == 'y':
             ax.plot(t*v1[0],t*v1[1],color='red')
             ax.plot(t*v2[0],t*v2[1],color='red')
@@ -264,11 +277,18 @@ def plotting_time():
     ax.set_ylabel(r'\LARGE $x_2$')
 
     ## Colorbar stuff!
+    mag_max = mag_extrema[0]
+    mag_min = mag_extrema[1]
     cmap = cm.winter
     norm = cm.colors.Normalize(vmin=mag_min,vmax=mag_max)
-    plt.colorbar(cm.ScalarMappable(norm=norm,cmap=cmap), ax=ax, ticks=[mag_min,(3*mag_min+mag_max)/4,(mag_min+mag_max)/2,(mag_min+3*mag_max)/4,mag_max],label='Vector Field Magnitude')  
+    tick_list = [mag_min,(3*mag_min+mag_max)/4,(mag_min+mag_max)/2,(mag_min+3*mag_max)/4,mag_max]
+    plt.colorbar(cm.ScalarMappable(norm=norm,cmap=cmap), ax=ax, ticks=tick_list,label='Vector Field Magnitude')
 
     return plt.show(fig)
 
 ## Show-off time I guess.
-plotting_time()
+t_0,T,X_0,d_ind,sol_number,A,v1,v2,ex_choice = user_choices()
+t = np.arange(t_0, T+h, h) # Solution interval.
+sol = [x_sol(t,x0) for x0 in X_0] # List of solutions for each X_0. 
+x_val_mesh,m_radius,mesh = mesh2D(t,sol)
+plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh)
