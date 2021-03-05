@@ -83,67 +83,71 @@ def lin_coeff_matrix():
         T = 4*np.pi # End of solution interval.
     return A,t_0,T,np.transpose(P)[0],np.transpose(P)[1]
 
-def solution_number(ex_choice):
+## User choice for number of solution curves from randomized initial data. 
+def solution_number(d_ind):
     sol_number = input("\n\n How many solutions would you like to plot with the example ODE system? (REMARK: 10+ solutions may result in significantly longer run times): ")
     if sol_number == 1:
-        X_0 = np.array([[0,1]])
+        X_0 = np.array([[random(),random()]])
     else:
         dimension = (int(sol_number),2)
-        scaling_d = {'1': 3,'2': 3.2, '3': 0.5}
-        X_0 = scaling_d[ex_choice]*np.random.uniform(-1,1,dimension)
+        scaling_d = {'1': 3,'2': 3.2, '3': 0.5, '4': 1} # Choses the length for the range of random initial conditions. 
+        X_0 = scaling_d[d_ind]*np.random.uniform(-1,1,dimension)
     return X_0,int(sol_number)
-
-## User input. Currently set up for numpy notation only.
+    
+## Example parameters defined by user.
+def example_parameters():
+    d_ind = input("Select Example (enter the listed integer). Options are:\n\n 1: nonlinear Ex 1\n 2: nonlinear Ex 2\n 3: linear \n") # d_ind is the user's choice of index for the ODE dictionary. 
+    if d_ind == '1':
+        t_0 = 0 # Initial conditions
+        T = 10*np.pi # End of desired solution interval 
+        X_0,sol_number = solution_number(d_ind)
+        A,v1,v2 = None,None,None
+    elif d_ind == '2':
+        t_0 = -14*np.pi # Initial conditions
+        T = 14*np.pi # End of desired solution interval 
+        X_0,sol_number = solution_number(d_ind)
+        A,v1,v2 = None,None,None
+    elif d_ind == '3':
+        X_0,sol_number = solution_number(d_ind)
+        A,t_0,T,v1,v2 = lin_coeff_matrix()
+    else: 
+        print("Incorrect input! Please enjoy nonlinear example 2 for your troubles.")
+        d_ind = '2'
+        t_0 = 0 # Initial conditions
+        T = 14*np.pi # End of desired solution interval 
+        X_0,sol_number = solution_number('2')
+        A,v1,v2 = None,None,None
+        print("Initial values randomly selected for your solution curve(s): ")
+        print(X_0)
+    return t_0,T,X_0,d_ind,sol_number,A,v1,v2
+## This is where the eval() function is being used: to allow the user to input numpy code to define the ODE. 
+def user_RHS():
+    user_RHS_1 = input("Enter RHS of 1st Eq. with numpy notation: ")
+    user_RHS_2 = input("Enter RHS of 2nd Eq. with numpy notation: ")
+    user_IC_t0 = input("Enter the t_0 value: ")
+    user_IC_X01 = input("Enter the 1st X_0 value: ")
+    user_IC_X02 = input("Enter the 2nd X_0 value: ")
+    user_T = input("Enter the upper bound for the t-interval: ")
+    
+    t_0 = float(user_IC_t0) # Initial conditions  
+    X_0 = np.array([[float(user_IC_X01),float(user_IC_X02)]])
+    T = float(user_T)
+    return t_0,T,X_0
+## User input.
 def user_choices():
     print("\n\n Welcome! In the following prompts use x[0] and x[1] for the 1st and 2nd state variables respectively of your ODE system.\n")
     example = input("Use an example ODE? enter 'y' for yes or anything else for no: ")
     if example == 'y':
-    ## Example parameters defined by user. 
-        ex_choice = input("Select Example (enter the listed integer). Options are:\n\n 1: nonlinear Ex 1\n 2: nonlinear Ex 2\n 3: linear \n")
-        if ex_choice == '1':
-            d_ind = ex_choice
-            t_0 = 0 # Initial conditions
-            T = 10*np.pi # End of desired solution interval 
-            X_0,sol_number = solution_number(ex_choice)
-            A,v1,v2 = None,None,None
-        elif ex_choice == '2':
-            d_ind = ex_choice
-            t_0 = -14*np.pi # Initial conditions
-            T = 14*np.pi # End of desired solution interval 
-            X_0,sol_number = solution_number(ex_choice)
-            A,v1,v2 = None,None,None
-        elif ex_choice == '3':
-            d_ind = ex_choice
-            X_0,sol_number = solution_number(ex_choice)
-            A,t_0,T,v1,v2 = lin_coeff_matrix()
-        else: 
-            print("Incorrect input! Please enjoy nonlinear example 2 for your troubles.")
-            d_ind = '2'
-            t_0 = 0 # Initial conditions
-            T = 14*np.pi # End of desired solution interval 
-            X_0,sol_number = solution_number('2')
-            A,v1,v2 = None,None,None
-        print("Initial values randomly selected for your solution curve(s): ")
-        print(X_0) 
+        t_0,T,X_0,d_ind,sol_number,A,v1,v2 = example_parameters()
     else:
-    # User defined parameters including RHS of ODE systems, initial condition, and time interval. 
-        user_RHS_1 = input("Enter RHS of 1st Eq. with numpy notation: ")
-        user_RHS_2 = input("Enter RHS of 2nd Eq. with numpy notation: ")
-        user_IC_t0 = input("Enter the t_0 value: ")
-        user_IC_X01 = input("Enter the 1st X_0 value: ")
-        user_IC_X02 = input("Enter the 2nd X_0 value: ")
-        user_T = input("Enter the upper bound for the t-interval: ")
-    
-        t_0 = float(user_IC_t0) # Initial conditions  
-        X_0 = np.array([[float(user_IC_X01),float(user_IC_X02)]])
-        T = float(user_T)
+        t_0,T,X_0 = user_RHS()
         d_ind = '4'
         sol_number = 1
-        A,v1,v2 = None,None,None
-    return t_0,T,X_0,d_ind,sol_number,A,v1,v2,ex_choice
+        A,v1,v2 = None,None,None    
+    return t_0,T,X_0,d_ind,sol_number,A,v1,v2
 ## Numerical Solution as a python function
 h = 0.005 # Step-size
-def x_sol(time, X_naught):
+def x_sol(time, X_naught,d_ind):
     x = X_naught # Initialize I.C.
     sol = []
     overflow_risk = False
@@ -200,14 +204,7 @@ def vector_line(t,p_x1,p_x2,r1,r2):
     point = np.array([p_x1,p_x2]) # Midpoint for the line
     RHS_f1 = RHS_ODE[d_ind](t,point)[0]
     RHS_f2 = RHS_ODE[d_ind](t,point)[1]
-    '''
-    if np.abs(RHS_f1)<=1E-10 and RHS_f1>0:
-        angle = np.pi/2
-    elif np.abs(RHS_f1)<=1E-10 and RHS_f1<0:
-        angle = -np.pi/2
-    else:
-        angle = np.arctan2(r1*RHS_f2,r2*RHS_f1) #Get rid of following line if this is kept.
-    '''
+
     angle = np.arctan2(r1*RHS_f2,r2*RHS_f1) # angle of v.f. with x1-axis. NOTE: arctan2 eats in two values whereas arctan takes in a a single argument (usually y/x). 
     x1_ellipse = r1*np.cos(angle) # Components of point on ellipse.
     x2_ellipse = r2*np.sin(angle)
@@ -241,6 +238,48 @@ def line_color(t,p_x1,p_x2,mesh):
     v_p_mag_scaled = (v_p_mag-mag_min)/(mag_max-mag_min) # Linear scaling of vf magnitude on mesh grid to the interval [0,1]. 
     return vf_coloring(v_p_mag_scaled),[mag_max,mag_min]
 
+## Eigenvector plotting option.
+def eigen_lines(v1,v2,x_val_mesh):
+    plot_e_vecs = input("Plot eigenvectors as well? Enter 'y' for yes and anything else for no (Remark: there is still a minor issue of fitting if you selected only a single curve or if the initial conditions for multiple curves weren't sufficiently well distributed between all four quadrants):\n ") 
+    if plot_e_vecs == 'y':
+        x1_min = x_val_mesh[0][0]
+        x1_max = x_val_mesh[0][31]
+        print(x1_min,x1_max)
+        x2_min = x_val_mesh[1][0]
+        x2_max = x_val_mesh[1][31]
+        print(x2_min,x2_max)
+        diag_angle_1 = np.arctan2(x2_max,x1_max)        
+        diag_angle_2 = np.arctan2(x2_max,x1_min)
+        diag_angles = [diag_angle_1,diag_angle_2,diag_angle_1+np.pi,diag_angle_2+np.pi] 
+        eigen_angle_1 = np.arctan2(v1[1],v1[0])
+        eigen_angle_2 = np.arctan2(v2[1],v2[0])
+        count_1 = 0 
+        count_2 = 0
+        for theta in reversed(diag_angles):
+            if eigen_angle_1 >= theta:
+                count_1 = count_1+1
+            if eigen_angle_2 >= theta:
+                count_2 = count_2+1  
+        if count_1%4 == 0 or count_1%4 == 2:
+            s1_i = x1_min/v1[0]
+            s1_f = x1_max/v1[0]
+        else:
+            s1_i = x2_min/v1[1]
+            s1_f = x2_max/v1[1]
+        if count_2%4 == 0 or count_2%4 == 2:
+            s2_i = x1_min/v2[0]
+            s2_f = x1_max/v2[0]
+        else:
+            s2_i = x2_min/v2[1]
+            s2_f = x2_max/v2[1]         
+        s1 = np.linspace(s1_i, s1_f)
+        s2 = np.linspace(s2_i, s2_f)
+        print(s1)
+        v1_line_1,v1_line_2 = s1*v1[0], s1*v1[1]
+        v2_line_1,v2_line_2 = s2*v2[0], s2*v2[1]
+
+    return [v1_line_1,v1_line_2],[v2_line_1,v2_line_2]
+
 ## A function to set up the plots.
 def plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh):
         
@@ -260,6 +299,12 @@ def plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh):
 
             ax.plot(vector_line(t,p,q,m_radius[0],m_radius[1])[0],vector_line(t,p,q,m_radius[0],m_radius[1])[1],color=mag_color)
             #plt.arrow(arrow_start_x1,arrow_start_x2,dx1,dx2,shape='right',head_width=0.03,color=mag_color)
+    ## Plot eigenvector subspaces for linear systems.
+    if d_ind == '3':
+        v1_line,v2_line = eigen_lines(v1,v2,x_val_mesh)
+        ax.plot(v1_line[0],v1_line[1],color='red')
+        ax.plot(v2_line[0],v2_line[1],color='red')
+        print(v1_line)    
     ## Plots the solution curves
     for i in range(0,sol_number):
         border_color = 'xkcd:black'#cm.get_cmap(color_choice)(0)
@@ -267,12 +312,6 @@ def plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh):
         ax.plot(sol[i][:,0],sol[i][:,1],linewidth=2.5,color=border_color)# Border.
         ax.plot(sol[i][:,0],sol[i][:,1],color=inner_color) # Solution curve plot.
 
-    if ex_choice == '3': # Plot eigenvector subspaces for linear systems.
-        plot_e_vecs = input("Plot eigenvectors as well? Enter 'y' for yes and anything else for no:\n ") 
-        if plot_e_vecs == 'y':
-            ax.plot(t*v1[0],t*v1[1],color='red')
-            ax.plot(t*v2[0],t*v2[1],color='red')
-    
     ax.set_xlabel(r'\LARGE $x_1$') # Label the axes!
     ax.set_ylabel(r'\LARGE $x_2$')
 
@@ -286,9 +325,12 @@ def plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh):
 
     return plt.show(fig)
 
-## Show-off time I guess.
-t_0,T,X_0,d_ind,sol_number,A,v1,v2,ex_choice = user_choices()
-t = np.arange(t_0, T+h, h) # Solution interval.
-sol = [x_sol(t,x0) for x0 in X_0] # List of solutions for each X_0. 
-x_val_mesh,m_radius,mesh = mesh2D(t,sol)
-plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh)
+## Execution of the program. Named after Zhu Li Moon from Avatar: Legend of Korra.
+def Zhu_Li_DoTheThing():
+    t = np.arange(t_0, T+h, h) # Solution interval.
+    sol = [x_sol(t,x0,d_ind) for x0 in X_0] # List of solutions for each X_0. 
+    x_val_mesh,m_radius,mesh = mesh2D(t,sol)
+    plots = plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh)
+    return plots
+t_0,T,X_0,d_ind,sol_number,A,v1,v2 = user_choices()
+Zhu_Li_DoTheThing()
