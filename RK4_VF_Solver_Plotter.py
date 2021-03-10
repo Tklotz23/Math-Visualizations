@@ -8,35 +8,66 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 #mpl.rcParams['text.usetex'] = True
-from matplotlib import cm
+from matplotlib import cm	
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
 ## These are functions for example ODEs that are stored in a dictonary. Choices are called by user.
 
 def RHS_ODE1(t,x):
+    '''
+    Example 1 of nonlinear example options. Defines x1 and x2 coordinates of the vector field. 
+    Arguments: 
+    t -- t-values compute from a numpy linspace or arange. 
+    x -- np.array whose components (x1,x2) are coordinates in the plane. 
+    Returns:
+    vector -- this is the vector as a numpy array at the point (x1,x2) at time t. 
+    '''
     f1 = np.sin(x[1]) # RHS of first ODE in the system.
     f2 = -x[0]/8-np.cos(x[1])/2 # RHS of the second.
-    return np.array([f1,f2])
+    vector = np.array([f1,f2])
+    return vector
 
 def RHS_ODE2(t,x):
+    '''
+    Same as RHS_ODE1 but for 2nd nonlinear example. 
+    '''
     f1 = x[1]**3-x[0]
     f2 = np.cos(x[0])
-    return np.array([f1,f2])
+    vector = np.array([f1,f2])
+    return vector
 
 def RHS_ODE3(t,x):
+    '''
+    Same as RHS_ODE1 and RHS_ODE2 but with a user defined matrix A (via eigenvectors and eigenvalues) that defines a linear system. 
+    '''
     f1 = A[0,0]*x[0]+A[0,1]*x[1]
     f2 = A[1,0]*x[0]+A[1,1]*x[1]
-    return np.array([f1,f2])
+    vector = np.array([f1,f2])
+    return vector
 
 def RHS_ODE4(t,x):
+    '''
+    Same as RHS_ODE1 and RHS_ODE2 but user can directly input numpy code to define their own ODE system. 
+    '''
     f1 = eval(user_RHS_1)
     f2 = eval(user_RHS_2)
-    return np.array([f1,f2])
+    vector = np.array([f1,f2])
+    return vector
 
+## This is the function dictionary. 
 RHS_ODE = {'1': RHS_ODE1,'2': RHS_ODE2,'3': RHS_ODE3,'4': RHS_ODE4} # ODE dictionary. 
-
-## The following function is for setting the paramters of the linear ODE (example 3). 
+ 
 def lin_coeff_matrix():
+    '''
+    This function lets the user define the parameters of the linear example RHS_ODE3. 
+    Arguments: 
+    None
+    Returns:
+    A -- 2x2 matrix of the linear system as defined by the eigenvectors and eigenvalues vis a normal form. 
+    t_0 -- intial condition time variable. 
+    T -- end of time interval for solution.
+    P[0],P[1] -- The eigenvectors (or real and imaginary part of a single complex eigenvector or an eigenvector plus a generalized eigenvector). 
+    '''
     pre_e_vec11=input("Enter first component of first desired real eigenvector as a float:\n ")
     pre_e_vec12=input("Enter second component of first desired real eigenvector as a float:\n ")
     pre_e_vec21=input("Enter first component of second desired real eigenvector as a float:\n ")
@@ -46,8 +77,10 @@ def lin_coeff_matrix():
     e_vec21 = float(pre_e_vec21)
     e_vec22 = float(pre_e_vec22)
 
-    P = np.array([[e_vec11,e_vec12],[e_vec21,e_vec22]])
+    P = np.array([[e_vec11,e_vec21],[e_vec12,e_vec22]]) # Define the change of basis matrix for diagonalization of matrix A. 
     Pinv = np.linalg.inv(P)
+    v1 = P[:,0]
+    v2 = P[:,1]
 
     r_c_choice = input("For real, nondefective, eigenvectors enter 'r', for complex enter 'c', and for repeated, defective, enter 'rr':\n")
     if r_c_choice == 'r':
@@ -81,21 +114,43 @@ def lin_coeff_matrix():
         A = P @ C @ Pinv
         t_0 = -4*np.pi # Start of solution interval.
         T = 4*np.pi # End of solution interval.
-    return A,t_0,T,np.transpose(P)[0],np.transpose(P)[1]
+    return A,t_0,T,v1,v2
 
-## User choice for number of solution curves from randomized initial data. 
+
 def solution_number(d_ind):
+    '''
+    This function prompts the user for the number of random solution curves they would like to plot for their selected example. 
+    Arguments: 
+    d_ind -- An integer as a string that indicates the user's choice of ODE example. 
+    Returns: 
+    X_0 -- Randomized initial conditions stored as a numpy array. 
+    sol_number_int -- Number of random solutions chosen by user as an int. 
+    '''
     sol_number = input("\n\n How many solutions would you like to plot with the example ODE system? (REMARK: 10+ solutions may result in significantly longer run times): ")
+    sol_number_int = int(sol_number)
     if sol_number == 1:
         X_0 = np.array([[random(),random()]])
     else:
         dimension = (int(sol_number),2)
         scaling_d = {'1': 3,'2': 3.2, '3': 0.5, '4': 1} # Choses the length for the range of random initial conditions. 
         X_0 = scaling_d[d_ind]*np.random.uniform(-1,1,dimension)
-    return X_0,int(sol_number)
+    return X_0,sol_number_int
     
-## Example parameters defined by user.
+
 def example_parameters():
+    '''
+    Prompts user for their ODE example selection. 
+    Arguments:
+    None
+    Returns: 
+    t_0 -- Initial condition for time variable (float). 
+    T -- End of solution interval for chosen example (float). 
+    X_0 -- Random initial conditions as numpy array.
+    d_ind -- String as defined by user that selects ODE choice from a dictionary. 
+    sol_number -- String as defined by user that selects number of randomized soutions to compute/plot. 
+    A -- 2x2 matrix for linear example.
+    v1, v2 -- Eigenvectors for linear example. 
+    '''
     d_ind = input("Select Example (enter the listed integer). Options are:\n\n 1: nonlinear Ex 1\n 2: nonlinear Ex 2\n 3: linear \n") # d_ind is the user's choice of index for the ODE dictionary. 
     if d_ind == '1':
         t_0 = 0 # Initial conditions
@@ -120,8 +175,17 @@ def example_parameters():
         print("Initial values randomly selected for your solution curve(s): ")
         print(X_0)
     return t_0,T,X_0,d_ind,sol_number,A,v1,v2
-## This is where the eval() function is being used: to allow the user to input numpy code to define the ODE. 
+
 def user_RHS():
+    '''
+    This function allows the user to input numpy pyhton code to directly input their own nonlinear system and initial conditions. 
+    Arguments: 
+    None
+    Returns: 
+    t_0 -- User selected initial time. 
+    T -- User selected final time for solution interval. 
+    X_0 -- User selected initial condition.
+    '''
     user_RHS_1 = input("Enter RHS of 1st Eq. with numpy notation: ")
     user_RHS_2 = input("Enter RHS of 2nd Eq. with numpy notation: ")
     user_IC_t0 = input("Enter the t_0 value: ")
@@ -133,8 +197,21 @@ def user_RHS():
     X_0 = np.array([[float(user_IC_X01),float(user_IC_X02)]])
     T = float(user_T)
     return t_0,T,X_0
-## User input.
+
 def user_choices():
+    '''
+    This function captures all initial user input in conjunction with some additional functions that have been previously defined. 
+    Arguments: 
+    None
+    Returns: 
+    t_0 -- Initial time. 
+    T -- Final time.
+    X_0 -- Initial condition(s). 
+    d_ind -- ODE selection as a string. 
+    sol_number -- Number of solutions selected as a string. 
+    A -- 2x2 matrix for linear case if chosen. 
+    v1,v2 -- Eigenvectors/generalized eigenvectors/real and imaginary parts of a complex eigenvector for linear case if chosen. 
+    '''
     print("\n\n Welcome! In the following prompts use x[0] and x[1] for the 1st and 2nd state variables respectively of your ODE system.\n")
     example = input("Use an example ODE? enter 'y' for yes or anything else for no: ")
     if example == 'y':
@@ -145,9 +222,18 @@ def user_choices():
         sol_number = 1
         A,v1,v2 = None,None,None    
     return t_0,T,X_0,d_ind,sol_number,A,v1,v2
-## Numerical Solution as a python function
-h = 0.005 # Step-size
+
+
 def x_sol(time, X_naught,d_ind):
+    '''
+    This function runs the RK4 algorithm with a warning if solutions start to become large. 
+    Arguments:
+    time -- A numpy array defining the solution interval. 
+    X_naught -- The initial condition to start the solution from. 
+    d_ind -- Selection of ODE from ODE dictionary.
+    Returns:
+    Solution --  A numpy array defining points (x1,x2) in the plane along the solution curve.
+    '''
     x = X_naught # Initialize I.C.
     sol = []
     overflow_risk = False
@@ -166,10 +252,20 @@ def x_sol(time, X_naught,d_ind):
         else:
             print("Solution getting too large! Happens at time t=",s)
             break
-    return np.array(sol)
+    solution = np.array(sol)
+    return solution
  
-## Now to make a meshgrid adapted to the size of the solution curves.
 def mesh2D(t,sol):
+    '''
+    This generates a mesh to define the vector field. It is adapted to the largest solution curves resulting from the initial conditions.
+    Arguments:  
+    t -- Numpy array defining the solution interval.
+    sol -- Numpy array defining points (x1,x2) along solution curves in the plane.
+    Returns: 
+    x_val_mesh -- Intervals along the coordinate axes x1 and x2 that are generated by the solutions with largest and smallest x1 and x2 values. 
+    m_radius -- Semi-major and semi-minor axes of an ellipse at each point in the meshgrid to account for uneven scaling. Used primarily in the function "vector_line"
+    mesh_full -- The full mesh as a numpy array defined by x_val_mesh. 
+    '''
     mesh_density = 32
     ## initializing lists to select largest and smallest coordinate values among all solution curves. 
     min_list_1 = []
@@ -197,10 +293,20 @@ def mesh2D(t,sol):
 
     m_x1, m_x2 = np.meshgrid(x1_val,x2_val)
     mesh_full = np.array([m_x1,m_x2]) # Full mesh.
-    return [x1_val,x2_val],[m_radius_1,m_radius_2],mesh_full
+    x_val_mesh = [x1_val,x2_val]
+    m_radius = [m_radius_1,m_radius_2]
+    return x_val_mesh,m_radius,mesh_full
 
-## Function that creates each little line on a mesh_grid according the vector field defined by the ODE system. 
 def vector_line(t,p_x1,p_x2,r1,r2):
+    '''
+    This function returns the data needed to plot a line segment at each point in the meshgrid whose length is constant based on x1 and x2 scaling and has direction in agreement with the vector field defined by the ODE chosen by the user. This is essentially my own version of the quiver class from matplotlib but with (currently) far less functionality. 
+    Arguments: 
+    t -- solution interval as a numpy array. 
+    p_x1,p_x2 -- Coordinates of a point in the meshgrid. 
+    r1,r2 -- Semi-major and semi-minor axes lengths determined by the meshgrid.
+    Returns:
+    
+    '''
     point = np.array([p_x1,p_x2]) # Midpoint for the line
     RHS_f1 = RHS_ODE[d_ind](t,point)[0]
     RHS_f2 = RHS_ODE[d_ind](t,point)[1]
@@ -240,7 +346,7 @@ def line_color(t,p_x1,p_x2,mesh):
 
 ## Eigenvector plotting option.
 def eigen_lines(v1,v2,x_val_mesh):
-    plot_e_vecs = input("Plot eigenvectors as well? Enter 'y' for yes and anything else for no (Remark: there is still a minor issue of fitting if you selected only a single curve or if the initial conditions for multiple curves weren't sufficiently well distributed between all four quadrants):\n ") 
+    plot_e_vecs = input("Plot eigenvectors as well? Enter 'y' for yes and anything else for no.\n Remark: there is still a minor issue of fitting if you selected only a single curve or if the initial conditions for multiple curves weren't sufficiently well distributed between all four quadrants\n ") 
     if plot_e_vecs == 'y':
         x1_min = x_val_mesh[0][0]
         x1_max = x_val_mesh[0][31]
@@ -274,7 +380,6 @@ def eigen_lines(v1,v2,x_val_mesh):
             s2_f = x2_max/v2[1]         
         s1 = np.linspace(s1_i, s1_f)
         s2 = np.linspace(s2_i, s2_f)
-        print(s1)
         v1_line_1,v1_line_2 = s1*v1[0], s1*v1[1]
         v2_line_1,v2_line_2 = s2*v2[0], s2*v2[1]
 
@@ -304,7 +409,8 @@ def plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh):
         v1_line,v2_line = eigen_lines(v1,v2,x_val_mesh)
         ax.plot(v1_line[0],v1_line[1],color='red')
         ax.plot(v2_line[0],v2_line[1],color='red')
-        print(v1_line)    
+        print(A)
+    
     ## Plots the solution curves
     for i in range(0,sol_number):
         border_color = 'xkcd:black'#cm.get_cmap(color_choice)(0)
@@ -332,5 +438,6 @@ def Zhu_Li_DoTheThing():
     x_val_mesh,m_radius,mesh = mesh2D(t,sol)
     plots = plotting_time(t,X_0,sol,x_val_mesh,m_radius,mesh)
     return plots
+h = 0.005 # Step-size
 t_0,T,X_0,d_ind,sol_number,A,v1,v2 = user_choices()
 Zhu_Li_DoTheThing()
